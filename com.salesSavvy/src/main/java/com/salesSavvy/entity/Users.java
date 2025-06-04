@@ -14,20 +14,20 @@ public class Users {
 	String email;
 	String password;
 	String gender;
-	String date;
+	String dob;
 	String role;
 	public Users() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	public Users(Long id, String username, String email, String password, String gender, String date, String role) {
+	public Users(Long id, String username, String email, String password, String gender, String dob, String role) {
 		super();
 		this.id = id;
 		this.username = username;
 		this.email = email;
 		this.password = password;
 		this.gender = gender;
-		this.date = date;
+		this.dob = dob;
 		this.role = role;
 	}
 	public Long getId() {
@@ -60,11 +60,11 @@ public class Users {
 	public void setGender(String gender) {
 		this.gender = gender;
 	}
-	public String getDate() {
-		return date;
+	public String getDob() {
+		return dob;
 	}
-	public void setDate(String date) {
-		this.date = date;
+	public void setDob(String dob) {
+		this.dob = dob;
 	}
 	public String getRole() {
 		return role;
@@ -75,6 +75,6 @@ public class Users {
 	@Override
 	public String toString() {
 		return "Users [id=" + id + ", username=" + username + ", email=" + email + ", password=" + password
-				+ ", gender=" + gender + ", date=" + date + ", role=" + role + "]";
+				+ ", gender=" + gender + ", dob=" + dob + ", role=" + role + "]";
 	}
 }

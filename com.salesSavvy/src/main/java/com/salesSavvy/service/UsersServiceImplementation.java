@@ -18,4 +18,11 @@ public class UsersServiceImplementation
 	public Users getUser(String username) {
 		return repo.findByUsername(username);
 	}
+	
+	@Override
+	public boolean validate(String username, String password) {
+		Users user = getUser(username);
+		String dbPassword = user.getPassword();
+		return (password == dbPassword);
+	}
 }

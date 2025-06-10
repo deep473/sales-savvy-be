@@ -23,6 +23,6 @@ public class UsersServiceImplementation
 	public boolean validate(String username, String password) {
 		Users user = getUser(username);
 		String dbPassword = user.getPassword();
-		return (password == dbPassword);
+		return (password.equals(dbPassword));
 	}
 }

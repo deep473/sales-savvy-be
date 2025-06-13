@@ -54,68 +54,58 @@ public class ProductController {
 		return service.deleteProduct(id);
 	}
 	
-	@GetMapping("/getAllProducts")
-	public List<Product> getAllProducts() {
-		return service.getAllProducts();
-	}
-	
-	@PostMapping("/addToCart")
-	public String addToCart(@RequestBody CartItem item) {
-	    Users user = uService.getUser(item.getUsername());
-	    if (user == null) return "user not found";
-
-	    Product product = service.searchProduct(item.getProductId());
-	    if (product == null) return "product not found";
-
-	    Cart cart = user.getCart();
-
-	    if (cart == null) {
-	        cart = new Cart();
-	        cart.setUser(user);
-	        cart.setCartItems(new ArrayList<>()); // ensure cartItems initialized
-	        user.setCart(cart);
-	        cService.addCart(cart); // Save cart so it gets ID
+	 @GetMapping("/getAllProducts")
+	    public List<Product> getAllProducts() {
+	        return service.getAllProducts();
 	    }
 
-	    // Get existing cart items list
-	    List<CartItem> items = cart.getCartItems();
-	    if (items == null) {
-	        items = new ArrayList<>();
-	        cart.setCartItems(items);
-	    }
+	    @PostMapping("/addToCart")
+	    public String addToCart(@RequestBody CartItem item) {
+	        Users user = uService.getUser(item.getUsername());
+	        if (user == null) return "user not found";
 
-	    // Check for existing item
-	    boolean found = false;
-	    for (CartItem ci : items) {
-	        if (ci.getProduct().getId().equals(product.getId())) {
-	            ci.setQuantity(ci.getQuantity() + item.getQuantity());
-	            found = true;
-	            break;
+	        Product product = service.searchProduct(item.getProductId());
+	        if (product == null) return "product not found";
+
+	        Cart cart = user.getCart();
+	        if (cart == null) {
+	            cart = new Cart();
+	            cart.setUser(user);
+	            user.setCart(cart);
+	            cService.addCart(cart);  // persist empty cart first
 	        }
+
+	        List<CartItem> items = cart.getCartItems();
+	        if (items == null) items = new ArrayList<>();
+
+	        boolean found = false;
+	        for (CartItem ci : items) {
+	            if (ci.getProduct().getId().equals(product.getId())) {
+	                ci.setQuantity(ci.getQuantity() + item.getQuantity());
+	                found = true;
+	                break;
+	            }
+	        }
+
+	        if (!found) {
+	            CartItem newItem = new CartItem();
+	            newItem.setCart(cart);
+	            newItem.setProduct(product);
+	            newItem.setQuantity(item.getQuantity());
+	            items.add(newItem);
+	        }
+
+	        cart.setCartItems(items);
+	        cService.addCart(cart);  // cascade saves CartItems
+	        return "cart added";
 	    }
 
-	    // If not already in cart, add as new item
-	    if (!found) {
-	        CartItem newItem = new CartItem();
-	        newItem.setCart(cart);
-	        newItem.setProduct(product);
-	        newItem.setQuantity(item.getQuantity());
-	        items.add(newItem);
+	    @GetMapping("/getCart/{username}")
+	    public List<CartItem> getCart(@PathVariable String username) {
+	        Users u = uService.getUser(username);
+	        if (u == null || u.getCart() == null) return new ArrayList<>();
+	        return u.getCart().getCartItems();
 	    }
-
-	    cService.addCart(cart); // persists both Cart and CartItems via cascade
-	    return "cart added";
-	}
-
-	
-	@GetMapping("/getCart/{username}")
-	public List<CartItem> getCart(@PathVariable String username) {
-	    Users user = uService.getUser(username);
-	    if (user == null || user.getCart() == null)
-	        return new ArrayList<>();
-
-	    return user.getCart().getCartItems();
-	}
 
 
 }

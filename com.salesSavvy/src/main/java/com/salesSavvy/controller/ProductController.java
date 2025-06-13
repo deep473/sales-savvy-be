@@ -6,10 +6,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.salesSavvy.entity.Cart;
-import com.salesSavvy.entity.CartData;
+import com.salesSavvy.entity.CartItem;
 import com.salesSavvy.entity.Product;
 import com.salesSavvy.entity.Users;
 import com.salesSavvy.service.CartService;
@@ -59,28 +60,62 @@ public class ProductController {
 	}
 	
 	@PostMapping("/addToCart")
-	public String addToCart(@RequestBody CartData data) {
-		Users user = uService.getUser(data.getUsername());
-		Product prod = service.searchProduct(data.getProductId());
-		
-		Cart c = null;
-		
-		if(user.getCart() == null) {
-			c = new Cart();
-			c.setUser(user);
-			List<Product> pList = new ArrayList<Product>();
-			pList.add(prod);
-			c.setProductList(pList);
-		}
-		else {
-			c = user.getCart();
-			c.getProductList().add(prod);
-		}
-		user.setCart(c);
-		//call service to update user entity	
-		cService.addCart(c);
-		
-		
-		return "cart added";
+	public String addToCart(@RequestBody CartItem item) {
+	    Users user = uService.getUser(item.getUsername());
+	    if (user == null) return "user not found";
+
+	    Product product = service.searchProduct(item.getProductId());
+	    if (product == null) return "product not found";
+
+	    Cart cart = user.getCart();
+
+	    if (cart == null) {
+	        cart = new Cart();
+	        cart.setUser(user);
+	        cart.setCartItems(new ArrayList<>()); // ensure cartItems initialized
+	        user.setCart(cart);
+	        cService.addCart(cart); // Save cart so it gets ID
+	    }
+
+	    // Get existing cart items list
+	    List<CartItem> items = cart.getCartItems();
+	    if (items == null) {
+	        items = new ArrayList<>();
+	        cart.setCartItems(items);
+	    }
+
+	    // Check for existing item
+	    boolean found = false;
+	    for (CartItem ci : items) {
+	        if (ci.getProduct().getId().equals(product.getId())) {
+	            ci.setQuantity(ci.getQuantity() + item.getQuantity());
+	            found = true;
+	            break;
+	        }
+	    }
+
+	    // If not already in cart, add as new item
+	    if (!found) {
+	        CartItem newItem = new CartItem();
+	        newItem.setCart(cart);
+	        newItem.setProduct(product);
+	        newItem.setQuantity(item.getQuantity());
+	        items.add(newItem);
+	    }
+
+	    cService.addCart(cart); // persists both Cart and CartItems via cascade
+	    return "cart added";
 	}
+
+	
+	@GetMapping("/getCart/{username}")
+	public List<CartItem> getCart(@PathVariable String username) {
+	    Users user = uService.getUser(username);
+	    if (user == null || user.getCart() == null)
+	        return new ArrayList<>();
+
+	    return user.getCart().getCartItems();
+	}
+
+
 }

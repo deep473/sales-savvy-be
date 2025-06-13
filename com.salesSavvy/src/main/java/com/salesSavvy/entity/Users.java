@@ -1,9 +1,11 @@
 package com.salesSavvy.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 @Entity
@@ -18,8 +20,10 @@ public class Users {
 	String dob;
 	String role;
 	
-	@OneToOne
-	Cart cart;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "cart_id", unique = true)
+	private Cart cart;
+
 	
 	public Users() {
 		super();
